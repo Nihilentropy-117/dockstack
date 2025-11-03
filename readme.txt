@@ -1,4 +1,4 @@
-Docker Compose Stack Actions
+Dockstack - Docker Compose Stack Manager
 
 This script checks the status of Docker Compose stacks and allows the user to bring them up or down. It's designed for situations where you have multiple Docker Compose files in various subdirectories, and you want an easy way to manage them.
 Usage
@@ -7,7 +7,7 @@ Run the script by entering:
 
 bash
 
-./docker-compose-checker.sh
+./dockstack
 
 The script will list all the Docker Compose stacks it finds in the immediate subdirectories, along with their current status (up or down). It will then ask you to select which files you want to act on.
 
