@@ -7,14 +7,23 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
+# Detect Docker Compose command
+if command -v docker compose >/dev/null 2>&1; then
+    DC_CMD="docker compose"
+elif command -v docker-compose >/dev/null 2>&1; then
+    DC_CMD="docker-compose"
+else
+    echo -e "${RED}Docker Compose not found.${NC}"
+    exit 1
+fi
+
 # Check if up
 check_docker_status() {
     local file="$1"
-    local status_line=$(docker-compose -f "$file" ps --services --filter "status=running" 2>/dev/null)
-    if [ -z "$status_line" ]; then
-        echo -e "${RED}down${NC}"
-    else
+    if $DC_CMD -f "$file" ps --quiet 2>/dev/null | grep -q .; then
         echo -e "${GREEN}up${NC}"
+    else
+        echo -e "${RED}down${NC}"
     fi
 }
 
@@ -30,14 +39,15 @@ fi
 echo "Found files:"
 for i in "${!compose_files[@]}"; do
     status=$(check_docker_status "${compose_files[i]}")
-    dirname=$(basename `dirname ${compose_files[i]}`)
+    dirname=$(basename "$(dirname "${compose_files[i]}")")
     printf "%-3s %-40s %-20s\n" "$((i+1))." "${dirname}" "[Stack is $status]"
 done
 
 echo "Enter Files(1 || 1,3 | a = all), q=quit"
 read -r choice
 
-# input
+# Input
+selected_files=()
 if [ "$choice" == "q" ]; then
     exit 0
 elif [ "$choice" == "a" ]; then
@@ -67,13 +77,13 @@ else
     exit 1
 fi
 
-# Do the thing
+# Execute
 for file in "${selected_files[@]}"; do
+    project=$(basename "$(dirname "$file")")
+    echo -e "\n${GREEN}[$action → $project]${NC}"
     if [ "$action" == "up" ]; then
-        echo -e "${GREEN}docker-compose -f $file up -d${NC}"
-        docker-compose -f "$file" up -d
-    elif [ "$action" == "down" ]; then
-        echo -e "${RED}docker-compose -f $file down${NC}"
-        docker-compose -f "$file" down
+        $DC_CMD -f "$file" up -d
+    else
+        $DC_CMD -f "$file" down
     fi
 done
